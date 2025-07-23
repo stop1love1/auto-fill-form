@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { Play, Loader2, Globe, Clock, Settings, FileText, Activity } from 'lucide-react';
+import { Play, Loader2, Globe, Clock, Settings, FileText, Activity, Search } from 'lucide-react';
 import { ConfigurationManager } from '@/components/ConfigurationManager';
 import { FormFieldEditor } from '@/components/FormFieldEditor';
 import { LogsPanel } from '@/components/LogsPanel';
@@ -46,6 +46,7 @@ export default function Home() {
         isVisible: boolean;
     }>({ isVisible: false });
     const [isClient, setIsClient] = useState(false);
+    const [isDetecting, setIsDetecting] = useState(false);
 
     // Prevent hydration mismatch
     useEffect(() => {
@@ -85,6 +86,52 @@ export default function Home() {
         },
         [setConfig, addLog],
     );
+
+    const handleDetectFields = useCallback(async () => {
+        if (!config.url.trim()) {
+            addLog('Error: Please enter a valid URL first');
+            return;
+        }
+
+        setIsDetecting(true);
+        addLog('🔍 Detecting form fields...');
+
+        try {
+            const response = await fetch('/api/detect-form-fields', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: config.url }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.fields.length > 0) {
+                // Update config with detected fields
+                setConfig((prev) => ({
+                    ...prev,
+                    fields: result.fields,
+                }));
+
+                addLog(`✅ Detected ${result.fields.length} form fields`);
+                result.fields.forEach((field: any) => {
+                    const fieldInfo = field.label || field.name || field.selector;
+                    addLog(`📝 Found: ${field.type} - ${fieldInfo}`);
+                });
+            } else {
+                addLog('⚠️ No form fields detected on this page');
+            }
+        } catch (error) {
+            addLog(`❌ Error detecting fields: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsDetecting(false);
+        }
+    }, [config.url, addLog, setConfig]);
 
     const handleStartAutomation = useCallback(
         async (testValue?: string) => {
@@ -224,16 +271,38 @@ export default function Home() {
                                         <AccordionContent className="space-y-4 pt-2">
                                             <div className="space-y-2">
                                                 <Label htmlFor="url">Website URL</Label>
-                                                <Input
-                                                    id="url"
-                                                    type="url"
-                                                    value={config.url}
-                                                    onChange={(e) =>
-                                                        setConfig((prev) => ({ ...prev, url: e.target.value }))
-                                                    }
-                                                    placeholder="https://example.com/form"
-                                                    disabled={isRunning}
-                                                />
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        id="url"
+                                                        type="url"
+                                                        value={config.url}
+                                                        onChange={(e) =>
+                                                            setConfig((prev) => ({ ...prev, url: e.target.value }))
+                                                        }
+                                                        placeholder="https://example.com/form"
+                                                        disabled={isRunning || isDetecting}
+                                                        className="flex-1"
+                                                    />
+                                                    <Button
+                                                        onClick={handleDetectFields}
+                                                        disabled={isRunning || isDetecting || !config.url.trim()}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="px-3"
+                                                    >
+                                                        {isDetecting ? (
+                                                            <>
+                                                                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                                                Detecting...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Search className="w-4 h-4 mr-1" />
+                                                                Detect
+                                                            </>
+                                                        )}
+                                                    </Button>
+                                                </div>
                                             </div>
 
                                             <Button

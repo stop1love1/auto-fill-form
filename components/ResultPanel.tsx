@@ -55,8 +55,6 @@ export function ResultPanel({ screenshot, fieldsProcessed = 0, totalFields = 0, 
         setRotation((prev) => (prev + 90) % 360);
     };
 
-    if (!isVisible) return null;
-
     return (
         <Card className="h-full">
             <CardHeader className="pb-3">
@@ -71,172 +69,183 @@ export function ResultPanel({ screenshot, fieldsProcessed = 0, totalFields = 0, 
                 </div>
             </CardHeader>
             <CardContent className="space-y-3">
-                {/* Compact Stats */}
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-blue-50 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-blue-600">{fieldsProcessed}</div>
-                        <div className="text-xs text-gray-600">Processed</div>
+                {!isVisible ? (
+                    // Empty State
+                    <div className="text-center text-muted-foreground py-8">
+                        <Activity className="w-8 h-8 mx-auto mb-3 opacity-50" />
+                        <p className="text-sm font-medium mb-1">No Results Yet</p>
+                        <p className="text-xs">Start automation to see results and screenshots</p>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-green-600">{totalFields}</div>
-                        <div className="text-xs text-gray-600">Total</div>
-                    </div>
-                </div>
-
-                {/* URL Info - Compact */}
-                {url && (
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                        <Globe className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                            <div className="text-xs text-gray-600 truncate">{url}</div>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={handleOpenUrl} className="h-6 px-2">
-                            <ExternalLink className="w-3 h-3" />
-                        </Button>
-                    </div>
-                )}
-
-                {/* Screenshot Section - Compact */}
-                {screenshot && (
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Screenshot</span>
-                            <div className="flex gap-1">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setShowScreenshot(!showScreenshot)}
-                                    className="h-6 px-2"
-                                >
-                                    <Eye className="w-3 h-3 mr-1" />
-                                    {showScreenshot ? 'Hide' : 'Show'}
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={handleDownloadScreenshot}
-                                    className="h-6 px-2"
-                                >
-                                    <Download className="w-3 h-3" />
-                                </Button>
+                ) : (
+                    <>
+                        {/* Compact Stats */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-blue-50 rounded-lg p-3 text-center">
+                                <div className="text-lg font-bold text-blue-600">{fieldsProcessed}</div>
+                                <div className="text-xs text-gray-600">Processed</div>
+                            </div>
+                            <div className="bg-green-50 rounded-lg p-3 text-center">
+                                <div className="text-lg font-bold text-green-600">{totalFields}</div>
+                                <div className="text-xs text-gray-600">Total</div>
                             </div>
                         </div>
 
-                        {showScreenshot && screenshot && (
+                        {/* URL Info - Compact */}
+                        {url && (
+                            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                                <Globe className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-xs text-gray-600 truncate">{url}</div>
+                                </div>
+                                <Button variant="ghost" size="sm" onClick={handleOpenUrl} className="h-6 px-2">
+                                    <ExternalLink className="w-3 h-3" />
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Screenshot Section - Compact */}
+                        {screenshot && (
                             <div className="space-y-2">
-                                {/* Compact Zoom Controls */}
-                                <div className="flex items-center justify-between bg-gray-50 p-2 rounded text-xs">
-                                    <span className="text-gray-600">{Math.round(zoomLevel * 100)}%</span>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium">Screenshot</span>
                                     <div className="flex gap-1">
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={handleZoomOut}
-                                            disabled={zoomLevel <= 0.25}
-                                            className="h-6 w-6 p-0"
+                                            onClick={() => setShowScreenshot(!showScreenshot)}
+                                            className="h-6 px-2"
                                         >
-                                            <ZoomOut className="w-3 h-3" />
+                                            <Eye className="w-3 h-3 mr-1" />
+                                            {showScreenshot ? 'Hide' : 'Show'}
                                         </Button>
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={handleZoomIn}
-                                            disabled={zoomLevel >= 3}
-                                            className="h-6 w-6 p-0"
+                                            onClick={handleDownloadScreenshot}
+                                            className="h-6 px-2"
                                         >
-                                            <ZoomIn className="w-3 h-3" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={handleRotate}
-                                            className="h-6 w-6 p-0"
-                                        >
-                                            <RotateCcw className="w-3 h-3" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={handleResetZoom}
-                                            className="h-6 px-2 text-xs"
-                                        >
-                                            Reset
+                                            <Download className="w-3 h-3" />
                                         </Button>
                                     </div>
                                 </div>
 
-                                {/* Screenshot Container */}
-                                <div
-                                    className="border rounded-lg overflow-auto bg-gray-100 relative group"
-                                    style={{ maxHeight: '300px' }}
-                                    onMouseEnter={() => setIsHovered(true)}
-                                    onMouseLeave={() => setIsHovered(false)}
-                                >
-                                    <div
-                                        className="flex items-center justify-center p-3"
-                                        style={{
-                                            transform: `scale(${zoomLevel}) rotate(${rotation}deg)`,
-                                            transformOrigin: 'center center',
-                                            transition: 'transform 0.2s ease-in-out',
-                                        }}
-                                    >
-                                        <img
-                                            src={`data:image/png;base64,${screenshot}`}
-                                            alt="Automation Result"
-                                            className="max-w-full h-auto object-contain"
-                                            onError={(e) => {
-                                                console.error('Failed to load screenshot');
-                                                e.currentTarget.style.display = 'none';
-                                            }}
-                                        />
-                                    </div>
-
-                                    {/* Hover Overlay */}
-                                    {isHovered && (
-                                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center transition-opacity">
-                                            <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <Button
-                                                        variant="secondary"
-                                                        size="sm"
-                                                        className="bg-white/90 hover:bg-white shadow-lg h-7"
-                                                    >
-                                                        <Maximize2 className="w-3 h-3 mr-1" />
-                                                        Full Screen
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 bg-transparent border-none">
-                                                    <DialogTitle className="sr-only">
-                                                        Screenshot Full Screen View
-                                                    </DialogTitle>
-                                                    <div className="flex items-center justify-center w-full h-full">
-                                                        <img
-                                                            src={`data:image/png;base64,${screenshot}`}
-                                                            alt="Automation Result - Full Screen"
-                                                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                                                            style={{
-                                                                transform: `rotate(${rotation}deg)`,
-                                                                transition: 'transform 0.2s ease-in-out',
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
+                                {showScreenshot && screenshot && (
+                                    <div className="space-y-2">
+                                        {/* Compact Zoom Controls */}
+                                        <div className="flex items-center justify-between bg-gray-50 p-2 rounded text-xs">
+                                            <span className="text-gray-600">{Math.round(zoomLevel * 100)}%</span>
+                                            <div className="flex gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleZoomOut}
+                                                    disabled={zoomLevel <= 0.25}
+                                                    className="h-6 w-6 p-0"
+                                                >
+                                                    <ZoomOut className="w-3 h-3" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleZoomIn}
+                                                    disabled={zoomLevel >= 3}
+                                                    className="h-6 w-6 p-0"
+                                                >
+                                                    <ZoomIn className="w-3 h-3" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleRotate}
+                                                    className="h-6 w-6 p-0"
+                                                >
+                                                    <RotateCcw className="w-3 h-3" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleResetZoom}
+                                                    className="h-6 px-2 text-xs"
+                                                >
+                                                    Reset
+                                                </Button>
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
+
+                                        {/* Screenshot Container */}
+                                        <div
+                                            className="border rounded-lg overflow-auto bg-gray-100 relative group"
+                                            style={{ maxHeight: '300px' }}
+                                            onMouseEnter={() => setIsHovered(true)}
+                                            onMouseLeave={() => setIsHovered(false)}
+                                        >
+                                            <div
+                                                className="flex items-center justify-center p-3"
+                                                style={{
+                                                    transform: `scale(${zoomLevel}) rotate(${rotation}deg)`,
+                                                    transformOrigin: 'center center',
+                                                    transition: 'transform 0.2s ease-in-out',
+                                                }}
+                                            >
+                                                <img
+                                                    src={`data:image/png;base64,${screenshot}`}
+                                                    alt="Automation Result"
+                                                    className="max-w-full h-auto object-contain"
+                                                    onError={(e) => {
+                                                        console.error('Failed to load screenshot');
+                                                        e.currentTarget.style.display = 'none';
+                                                    }}
+                                                />
+                                            </div>
+
+                                            {/* Hover Overlay */}
+                                            {isHovered && (
+                                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center transition-opacity">
+                                                    <Dialog>
+                                                        <DialogTrigger asChild>
+                                                            <Button
+                                                                variant="secondary"
+                                                                size="sm"
+                                                                className="bg-white/90 hover:bg-white shadow-lg h-7"
+                                                            >
+                                                                <Maximize2 className="w-3 h-3 mr-1" />
+                                                                Full Screen
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 bg-transparent border-none">
+                                                            <DialogTitle className="sr-only">
+                                                                Screenshot Full Screen View
+                                                            </DialogTitle>
+                                                            <div className="flex items-center justify-center w-full h-full">
+                                                                <img
+                                                                    src={`data:image/png;base64,${screenshot}`}
+                                                                    alt="Automation Result - Full Screen"
+                                                                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                                                                    style={{
+                                                                        transform: `rotate(${rotation}deg)`,
+                                                                        transition: 'transform 0.2s ease-in-out',
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
-                    </div>
-                )}
 
-                {/* Status Footer */}
-                <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="text-xs text-gray-600">Browser Active</span>
-                    </div>
-                </div>
+                        {/* Status Footer */}
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-gray-600">Browser Active</span>
+                            </div>
+                        </div>
+                    </>
+                )}
             </CardContent>
         </Card>
     );

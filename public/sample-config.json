@@ -1,0 +1,26 @@
+{
+    "name": "Edusoft Login Sample",
+    "description": "Sample configuration for Edusoft login automation",
+    "url": "https://el.edusoft.vn/auth/login",
+    "loadDelay": 3,
+    "fields": [
+        {
+            "id": "username-field",
+            "selector": "input[id=username]",
+            "value": "your_username_here",
+            "type": "input"
+        },
+        {
+            "id": "password-field",
+            "selector": "input[id=password]",
+            "value": "your_password_here",
+            "type": "input"
+        },
+        {
+            "id": "submit-button",
+            "selector": "button[type=submit]",
+            "value": "",
+            "type": "submit"
+        }
+    ]
+}

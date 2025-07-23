@@ -1,0 +1,34 @@
+{
+  "name": "Edusoft Login Test",
+  "description": "Automated login testing with multiple accounts",
+  "url": "https://el.edusoft.vn/auth/login",
+  "loadDelay": 3,
+  "fields": [
+    {
+      "id": "username-field",
+      "selector": "input[id=username]",
+      "value": "{username}",
+      "type": "input"
+    },
+    {
+      "id": "password-field", 
+      "selector": "input[id=password]",
+      "value": "{password}",
+      "type": "input"
+    },
+    {
+      "id": "submit-button",
+      "selector": "button[type=submit]",
+      "value": "",
+      "type": "submit"
+    }
+  ]
+}
+
+# Test Values (one per line, format: username,password)
+# Use {username} and {password} placeholders in config above
+admin,admin123
+user1,password1
+testuser,testpass
+demo,demo123
+student,student123 

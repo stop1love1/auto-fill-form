@@ -1,16 +1,20 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Play, Loader2, Globe, Clock, Settings } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
+import { Play, Loader2, Globe, Clock, Settings, FileText, Activity } from 'lucide-react';
 import { ConfigurationManager } from '@/components/ConfigurationManager';
 import { FormFieldEditor } from '@/components/FormFieldEditor';
 import { LogsPanel } from '@/components/LogsPanel';
 import { ResultPanel } from '@/components/ResultPanel';
+import { ImportConfig } from '@/components/ImportConfig';
+import { TestValuesManager } from '@/components/TestValuesManager';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
 interface FormField {
@@ -21,6 +25,8 @@ interface FormField {
 }
 
 interface AutomationConfig {
+    name?: string;
+    description?: string;
     url: string;
     loadDelay: number;
     fields: FormField[];
@@ -39,6 +45,12 @@ export default function Home() {
         fieldsProcessed?: number;
         isVisible: boolean;
     }>({ isVisible: false });
+    const [isClient, setIsClient] = useState(false);
+
+    // Prevent hydration mismatch
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     const addLog = useCallback(
         (message: string) => {
@@ -60,99 +72,156 @@ export default function Home() {
         [setConfig, addLog],
     );
 
-    const handleStartAutomation = useCallback(async () => {
-        if (!config.url.trim()) {
-            addLog('Error: Please enter a valid URL');
-            return;
-        }
+    const handleImportConfig = useCallback(
+        (importedConfig: AutomationConfig, testValues?: string[]) => {
+            setConfig(importedConfig);
+            addLog(`Configuration imported: ${importedConfig.name || importedConfig.url}`);
 
-        if (config.fields.length === 0) {
-            addLog('Error: Please add at least one form field');
-            return;
-        }
+            if (testValues && testValues.length > 0) {
+                addLog(`📋 Test values loaded: ${testValues.length} entries`);
+                // Store test values for future use
+                localStorage.setItem('test-values', JSON.stringify(testValues));
+            }
+        },
+        [setConfig, addLog],
+    );
 
-        setIsRunning(true);
-        addLog('Starting automation...');
-
-        try {
-            addLog(`Sending request to automate form...`);
-            const response = await fetch('/api/automate-form', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(config),
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+    const handleStartAutomation = useCallback(
+        async (testValue?: string) => {
+            if (!config.url.trim()) {
+                addLog('Error: Please enter a valid URL');
+                return;
             }
 
-            const responseResult = await response.json();
-            addLog(`✅ Automation completed: ${responseResult.message}`);
-            addLog(`📊 Fields processed: ${responseResult.fieldsProcessed}`);
-            addLog(`📸 Screenshot captured: ${responseResult.screenshot ? 'Yes' : 'No'}`);
-            addLog(`🌐 Browser remains open for manual inspection`);
+            if (config.fields.length === 0) {
+                addLog('Error: Please add at least one form field');
+                return;
+            }
 
-            // Set result data for display
-            setResult({
-                screenshot: responseResult.screenshot,
-                fieldsProcessed: responseResult.fieldsProcessed,
-                isVisible: true,
-            });
+            setIsRunning(true);
+            addLog('Starting automation...');
 
-            // Debug screenshot
-            console.log('Screenshot length:', responseResult.screenshot?.length);
-            console.log('Screenshot preview:', responseResult.screenshot?.substring(0, 50));
+            // Create config with test values if provided
+            let automationConfig = { ...config };
 
-            // Log each field that was processed
-            config.fields.forEach((field) => {
-                addLog(`✓ Filled: ${field.selector} = "${field.value}"`);
-            });
-        } catch (error) {
-            addLog(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        } finally {
-            setIsRunning(false);
-        }
-    }, [config, addLog]);
+            if (testValue) {
+                addLog(`🧪 Using test value: ${testValue}`);
+                const values = testValue.split(',');
+
+                // Replace placeholders in fields
+                automationConfig.fields = config.fields.map((field, index) => ({
+                    ...field,
+                    value: field.value
+                        .replace('{username}', values[0] || '')
+                        .replace('{password}', values[1] || '')
+                        .replace('{email}', values[0] || '')
+                        .replace('{value}', values[index] || ''),
+                }));
+            }
+
+            try {
+                addLog(`Sending request to automate form...`);
+                const response = await fetch('/api/automate-form', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(automationConfig),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const responseResult = await response.json();
+                addLog(`✅ Automation completed: ${responseResult.message}`);
+                addLog(`📊 Fields processed: ${responseResult.fieldsProcessed}`);
+                addLog(`📸 Screenshot captured: ${responseResult.screenshot ? 'Yes' : 'No'}`);
+                addLog(`🌐 Browser remains open for manual inspection`);
+
+                // Set result data for display
+                setResult({
+                    screenshot: responseResult.screenshot,
+                    fieldsProcessed: responseResult.fieldsProcessed,
+                    isVisible: true,
+                });
+
+                // Debug screenshot
+                console.log('Screenshot length:', responseResult.screenshot?.length);
+                console.log('Screenshot preview:', responseResult.screenshot?.substring(0, 50));
+
+                // Log each field that was processed
+                automationConfig.fields.forEach((field) => {
+                    addLog(`✓ Filled: ${field.selector} = "${field.value}"`);
+                });
+            } catch (error) {
+                addLog(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            } finally {
+                setIsRunning(false);
+            }
+        },
+        [config, addLog],
+    );
+
+    // Don't render until client-side hydration is complete
+    if (!isClient) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
             <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                        <div className="p-3 bg-blue-600 rounded-full">
-                            <Globe className="w-8 h-8 text-white" />
+                {/* Simplified Header */}
+                <div className="mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-600 rounded-lg">
+                                <Globe className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">Auto Form Filler</h1>
+                                <p className="text-sm text-gray-600">Automate form filling with Puppeteer</p>
+                            </div>
+                        </div>
+
+                        {/* Quick Stats */}
+                        <div className="flex items-center gap-3">
+                            <Badge variant="outline" className="flex items-center gap-1">
+                                <Globe className="w-3 h-3" />
+                                {config.url ? 'URL Set' : 'No URL'}
+                            </Badge>
+                            <Badge variant="outline" className="flex items-center gap-1">
+                                <FileText className="w-3 h-3" />
+                                {config.fields.length} Fields
+                            </Badge>
                         </div>
                     </div>
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">Auto Form Filler</h1>
-                    <p className="text-gray-600 text-lg">
-                        Automate form filling with Puppeteer - Save and manage your configurations
-                    </p>
                 </div>
 
-                {/* Main Layout - Left: Automation Controls, Right: Logs */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Left Side - Automation Controls */}
-                    <div className="space-y-6">
-                        <Tabs defaultValue="configuration" className="space-y-6">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="configuration">Configuration</TabsTrigger>
-                                <TabsTrigger value="fields">Form Fields</TabsTrigger>
-                            </TabsList>
-
-                            <TabsContent value="configuration" className="space-y-6">
-                                <div className="grid grid-cols-1 gap-6">
-                                    {/* Basic Configuration */}
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2">
-                                                <Settings className="w-5 h-5" />
-                                                Basic Configuration
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
+                {/* Main Content - 2 Column Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    {/* Left Column - Configuration & Fields (3/5 width) */}
+                    <div className="lg:col-span-3 space-y-4">
+                        {/* Configuration Section */}
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <Settings className="w-5 h-5" />
+                                    Configuration
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <Accordion type="single" collapsible defaultValue="basic" className="w-full">
+                                    <AccordionItem value="basic">
+                                        <AccordionTrigger className="text-sm">Basic Settings</AccordionTrigger>
+                                        <AccordionContent className="space-y-4 pt-2">
                                             <div className="space-y-2">
                                                 <Label htmlFor="url">Website URL</Label>
                                                 <Input
@@ -167,26 +236,8 @@ export default function Home() {
                                                 />
                                             </div>
 
-                                            <div className="space-y-2">
-                                                <Label htmlFor="loadDelay">Load Delay (seconds)</Label>
-                                                <Input
-                                                    id="loadDelay"
-                                                    type="number"
-                                                    min="0"
-                                                    max="60"
-                                                    value={config.loadDelay}
-                                                    onChange={(e) =>
-                                                        setConfig((prev) => ({
-                                                            ...prev,
-                                                            loadDelay: parseInt(e.target.value) || 0,
-                                                        }))
-                                                    }
-                                                    disabled={isRunning}
-                                                />
-                                            </div>
-
                                             <Button
-                                                onClick={handleStartAutomation}
+                                                onClick={() => handleStartAutomation()}
                                                 disabled={isRunning || !config.url.trim() || config.fields.length === 0}
                                                 className="w-full"
                                                 size="lg"
@@ -194,7 +245,7 @@ export default function Home() {
                                                 {isRunning ? (
                                                     <>
                                                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                                        Running...
+                                                        Running Automation...
                                                     </>
                                                 ) : (
                                                     <>
@@ -203,84 +254,83 @@ export default function Home() {
                                                     </>
                                                 )}
                                             </Button>
-                                        </CardContent>
-                                    </Card>
+                                        </AccordionContent>
+                                    </AccordionItem>
 
-                                    {/* Configuration Manager */}
-                                    <Card>
-                                        <CardContent className="pt-6">
+                                    <AccordionItem value="config-manager">
+                                        <AccordionTrigger className="text-sm">Configuration Manager</AccordionTrigger>
+                                        <AccordionContent className="pt-2">
                                             <ConfigurationManager
                                                 currentConfig={config}
                                                 onLoadConfig={handleLoadConfig}
                                             />
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            </TabsContent>
+                                        </AccordionContent>
+                                    </AccordionItem>
 
-                            <TabsContent value="fields" className="space-y-6">
-                                <Card>
-                                    <CardContent className="pt-6">
-                                        <FormFieldEditor
-                                            fields={config.fields}
-                                            onFieldsChange={(fields) => setConfig((prev) => ({ ...prev, fields }))}
-                                            disabled={isRunning}
-                                        />
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                        </Tabs>
+                                    <AccordionItem value="import">
+                                        <AccordionTrigger className="text-sm">Import Configuration</AccordionTrigger>
+                                        <AccordionContent className="pt-2">
+                                            <ImportConfig onImport={handleImportConfig} />
+                                        </AccordionContent>
+                                    </AccordionItem>
 
-                        {/* Quick Stats */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <Card>
-                                <CardContent className="pt-6">
-                                    <div className="flex items-center gap-2">
-                                        <Globe className="w-5 h-5 text-blue-600" />
-                                        <div>
-                                            <p className="text-sm text-muted-foreground">Current URL</p>
-                                            <p className="font-medium truncate">{config.url || 'Not set'}</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                            <Card>
-                                <CardContent className="pt-6">
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="w-5 h-5 text-green-600" />
-                                        <div>
-                                            <p className="text-sm text-muted-foreground">Load Delay</p>
-                                            <p className="font-medium">{config.loadDelay}s</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                            <Card>
-                                <CardContent className="pt-6">
-                                    <div className="flex items-center gap-2">
-                                        <Settings className="w-5 h-5 text-purple-600" />
-                                        <div>
-                                            <p className="text-sm text-muted-foreground">Form Fields</p>
-                                            <p className="font-medium">{config.fields.length}</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                    <AccordionItem value="test-values">
+                                        <AccordionTrigger className="text-sm">Test Values</AccordionTrigger>
+                                        <AccordionContent className="pt-2">
+                                            <TestValuesManager
+                                                onRunTest={handleStartAutomation}
+                                                isRunning={isRunning}
+                                            />
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                </Accordion>
+                            </CardContent>
+                        </Card>
+
+                        {/* Form Fields Section */}
+                        <Card>
+                            <CardContent className="pt-4">
+                                <FormFieldEditor
+                                    fields={config.fields}
+                                    onFieldsChange={(fields) => setConfig((prev) => ({ ...prev, fields }))}
+                                    disabled={isRunning}
+                                />
+                            </CardContent>
+                        </Card>
                     </div>
 
-                    {/* Right Side - Logs and Results */}
-                    <div className="space-y-6">
-                        <LogsPanel logs={logs} onClearLogs={clearLogs} />
+                    {/* Right Column - Logs & Results (2/5 width) */}
+                    <div className="lg:col-span-2 space-y-4">
+                        <Card className="h-full">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <Activity className="w-5 h-5" />
+                                    Activity & Results
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="h-full">
+                                <Tabs defaultValue="logs" className="h-full">
+                                    <TabsList className="grid w-full grid-cols-2">
+                                        <TabsTrigger value="logs">Logs</TabsTrigger>
+                                        <TabsTrigger value="results">Results</TabsTrigger>
+                                    </TabsList>
 
-                        <ResultPanel
-                            screenshot={result.screenshot}
-                            fieldsProcessed={result.fieldsProcessed}
-                            totalFields={config.fields.length}
-                            url={config.url}
-                            loadDelay={config.loadDelay}
-                            isVisible={result.isVisible}
-                        />
+                                    <TabsContent value="logs" className="h-full mt-4">
+                                        <LogsPanel logs={logs} onClearLogs={clearLogs} />
+                                    </TabsContent>
+
+                                    <TabsContent value="results" className="h-full mt-4">
+                                        <ResultPanel
+                                            screenshot={result.screenshot}
+                                            fieldsProcessed={result.fieldsProcessed}
+                                            totalFields={config.fields.length}
+                                            url={config.url}
+                                            isVisible={result.isVisible}
+                                        />
+                                    </TabsContent>
+                                </Tabs>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             </div>

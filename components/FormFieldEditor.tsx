@@ -2,8 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash2, Plus, Settings } from 'lucide-react';
 
@@ -45,107 +43,105 @@ export function FormFieldEditor({ fields, onFieldsChange, disabled = false }: Fo
         { value: 'textarea', label: 'Textarea' },
         { value: 'checkbox', label: 'Checkbox' },
         { value: 'radio', label: 'Radio' },
-        { value: 'submit', label: 'Submit Button' },
+        { value: 'submit', label: 'Submit' },
     ];
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold">Form Fields</h3>
+                    <Settings className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium">Form Fields</span>
                 </div>
                 <Button onClick={handleAddField} disabled={disabled} size="sm" variant="outline">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Field
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add
                 </Button>
             </div>
 
-            <div className="space-y-4">
-                {fields.map((field, index) => (
-                    <Card key={field.id} className="relative">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <CardTitle className="text-base">Field {index + 1}</CardTitle>
-                                <Button
-                                    onClick={() => handleRemoveField(field.id)}
-                                    disabled={disabled}
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-red-500 hover:text-red-700"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor={`selector-${field.id}`}>CSS Selector</Label>
-                                    <Input
-                                        id={`selector-${field.id}`}
-                                        value={field.selector}
-                                        onChange={(e) => handleFieldChange(field.id, { selector: e.target.value })}
-                                        placeholder="input[name='email']"
-                                        disabled={disabled}
-                                    />
+            {fields.length > 0 ? (
+                <div className="border rounded-lg overflow-hidden">
+                    <div className="bg-muted/50 px-3 py-2 border-b">
+                        <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground">
+                            <div className="col-span-4">Selector</div>
+                            <div className="col-span-2">Type</div>
+                            <div className="col-span-5">Value</div>
+                            <div className="col-span-1">Action</div>
+                        </div>
+                    </div>
+                    <div className="divide-y">
+                        {fields.map((field, index) => (
+                            <div key={field.id} className="px-3 py-2 hover:bg-muted/30 transition-colors">
+                                <div className="grid grid-cols-12 gap-2 items-center">
+                                    <div className="col-span-4">
+                                        <Input
+                                            value={field.selector}
+                                            onChange={(e) => handleFieldChange(field.id, { selector: e.target.value })}
+                                            placeholder="input[name='email']"
+                                            disabled={disabled}
+                                            className="h-8 text-xs"
+                                        />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <Select
+                                            value={field.type}
+                                            onValueChange={(value) =>
+                                                handleFieldChange(field.id, { type: value as FormField['type'] })
+                                            }
+                                            disabled={disabled}
+                                        >
+                                            <SelectTrigger className="h-8 text-xs">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {fieldTypeOptions.map((option) => (
+                                                    <SelectItem key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="col-span-5">
+                                        <Input
+                                            value={field.value}
+                                            onChange={(e) => handleFieldChange(field.id, { value: e.target.value })}
+                                            placeholder={
+                                                field.type === 'checkbox'
+                                                    ? 'true/false'
+                                                    : field.type === 'select'
+                                                    ? 'Option value'
+                                                    : field.type === 'submit'
+                                                    ? 'Button text'
+                                                    : 'Value'
+                                            }
+                                            disabled={disabled}
+                                            className="h-8 text-xs"
+                                        />
+                                    </div>
+                                    <div className="col-span-1 flex justify-center">
+                                        <Button
+                                            onClick={() => handleRemoveField(field.id)}
+                                            disabled={disabled}
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor={`type-${field.id}`}>Field Type</Label>
-                                    <Select
-                                        value={field.type}
-                                        onValueChange={(value) =>
-                                            handleFieldChange(field.id, { type: value as FormField['type'] })
-                                        }
-                                        disabled={disabled}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {fieldTypeOptions.map((option) => (
-                                                <SelectItem key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor={`value-${field.id}`}>Value</Label>
-                                <Input
-                                    id={`value-${field.id}`}
-                                    value={field.value}
-                                    onChange={(e) => handleFieldChange(field.id, { value: e.target.value })}
-                                    placeholder={
-                                        field.type === 'checkbox'
-                                            ? 'true or false'
-                                            : field.type === 'select'
-                                            ? 'Option value'
-                                            : field.type === 'submit'
-                                            ? 'Button text (optional)'
-                                            : 'Enter value to fill'
-                                    }
-                                    disabled={disabled}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-
-                {fields.length === 0 && (
-                    <Card>
-                        <CardContent className="pt-6">
-                            <div className="text-center text-muted-foreground">
-                                <Settings className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                <p>No fields added yet</p>
-                                <p className="text-sm">Click "Add Field" to get started</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-6 text-center">
+                    <Settings className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm text-muted-foreground">No fields added yet</p>
+                    <p className="text-xs text-muted-foreground">Click "Add" to get started</p>
+                </div>
+            )}
         </div>
     );
 }

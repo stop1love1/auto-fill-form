@@ -59,43 +59,60 @@ export function LogsPanel({ logs, onClearLogs }: LogsPanelProps) {
 
     return (
         <Card className="h-full">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <Terminal className="w-5 h-5 text-blue-600" />
-                        <CardTitle className="text-lg">Execution Logs</CardTitle>
+                        <Terminal className="w-4 h-4 text-blue-600" />
+                        <CardTitle className="text-base">Logs ({logs.length})</CardTitle>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={handleCopyLogs} disabled={logs.length === 0}>
-                            <Copy className="w-4 h-4 mr-2" />
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleCopyLogs}
+                            disabled={logs.length === 0}
+                            className="h-7 px-2"
+                        >
+                            <Copy className="w-3 h-3 mr-1" />
                             {copied ? 'Copied!' : 'Copy'}
                         </Button>
-                        <Button variant="outline" size="sm" onClick={handleDownloadLogs} disabled={logs.length === 0}>
-                            <Download className="w-4 h-4 mr-2" />
-                            Download
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleDownloadLogs}
+                            disabled={logs.length === 0}
+                            className="h-7 px-2"
+                        >
+                            <Download className="w-3 h-3 mr-1" />
+                            Save
                         </Button>
-                        <Button variant="outline" size="sm" onClick={onClearLogs} disabled={logs.length === 0}>
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Clear
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={onClearLogs}
+                            disabled={logs.length === 0}
+                            className="h-7 px-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                            <Trash2 className="w-3 h-3" />
                         </Button>
                     </div>
                 </div>
             </CardHeader>
             <CardContent className="pt-0">
-                <ScrollArea className="h-96 w-full rounded-md border p-4">
+                <ScrollArea className="h-80 w-full rounded-md border p-3">
                     {logs.length === 0 ? (
-                        <div className="text-center text-muted-foreground py-8">
-                            <Terminal className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p>No logs yet</p>
-                            <p className="text-sm">Start automation to see logs</p>
+                        <div className="text-center text-muted-foreground py-6">
+                            <Terminal className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">No logs yet</p>
+                            <p className="text-xs">Start automation to see logs</p>
                         </div>
                     ) : (
-                        <div className="space-y-1">
+                        <div className="space-y-0.5">
                             {logs.map((log, index) => {
                                 const level = getLogLevel(log);
                                 const color = getLogColor(level);
                                 return (
-                                    <div key={index} className={`text-sm font-mono ${color} break-all`}>
+                                    <div key={index} className={`text-xs font-mono ${color} break-all leading-relaxed`}>
                                         {log}
                                     </div>
                                 );
@@ -103,6 +120,14 @@ export function LogsPanel({ logs, onClearLogs }: LogsPanelProps) {
                         </div>
                     )}
                 </ScrollArea>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-3 border-t border-gray-200 mt-3">
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-xs text-gray-600">Logs Ready</span>
+                    </div>
+                </div>
             </CardContent>
         </Card>
     );

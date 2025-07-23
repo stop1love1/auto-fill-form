@@ -5,6 +5,7 @@ A modern Next.js application that uses Puppeteer to automate form filling on web
 ## ✨ Features
 
 -   🚀 **Automated Form Filling**: Uses Puppeteer to automatically fill forms on any website
+-   🔐 **Authentication Support**: Multiple authentication methods for login-protected websites
 -   ⏱️ **Configurable Load Delay**: Set custom delay times for page loading
 -   🔧 **Dynamic Field Management**: Add, remove, and configure form fields on the fly
 -   📝 **Multiple Field Types**: Support for input, select, textarea, checkbox, and radio fields
@@ -49,9 +50,21 @@ npm run dev
 ### Basic Setup
 
 1. **Enter Website URL**: Input the URL of the webpage containing the form you want to automate
-2. **Set Load Delay**: Configure how many seconds to wait after the page loads before filling forms
-3. **Add Form Fields**: Use the Form Fields tab to configure form elements
-4. **Save Configuration**: Use the Configuration Manager to save your setup for future use
+2. **Configure Authentication** (if needed): Use the Authentication tab to set up login for protected websites
+3. **Set Load Delay**: Configure how many seconds to wait after the page loads before filling forms
+4. **Add Form Fields**: Use the Form Fields tab to configure form elements
+5. **Save Configuration**: Use the Configuration Manager to save your setup for future use
+
+### Authentication Support
+
+For websites that require login, the app supports multiple authentication methods:
+
+-   **Manual Login**: Browser opens and waits for you to login manually
+-   **Credentials Login**: Automatically login using username/password
+-   **Cookies Authentication**: Use exported cookies from your browser
+-   **Session Data**: Use localStorage/sessionStorage data
+
+See [Authentication Guide](docs/AUTHENTICATION.md) for detailed instructions.
 
 ### Configuration Management
 

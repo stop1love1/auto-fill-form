@@ -8,10 +8,26 @@ interface FormField {
     type: 'input' | 'select' | 'textarea' | 'checkbox' | 'radio' | 'submit';
 }
 
+interface AuthenticationConfig {
+    enabled: boolean;
+    method: 'manual' | 'credentials' | 'cookies' | 'session';
+    credentials?: {
+        username?: string;
+        password?: string;
+        usernameSelector?: string;
+        passwordSelector?: string;
+        submitSelector?: string;
+    };
+    cookies?: string;
+    sessionData?: string;
+    waitAfterLogin?: number;
+}
+
 interface AutomationConfig {
     url: string;
     loadDelay: number;
     fields: FormField[];
+    authentication?: AuthenticationConfig;
 }
 
 export async function POST(request: NextRequest) {
@@ -51,6 +67,112 @@ export async function POST(request: NextRequest) {
             timeout: 30000,
         });
         console.log('Page loaded successfully');
+
+        // Handle authentication if enabled
+        if (config.authentication?.enabled) {
+            console.log('Authentication is enabled, processing login...');
+
+            switch (config.authentication.method) {
+                case 'manual':
+                    console.log('Manual login mode - waiting for user to login...');
+                    if (config.authentication?.waitAfterLogin) {
+                        console.log(`Waiting ${config.authentication?.waitAfterLogin} seconds for manual login...`);
+                        await new Promise((resolve) =>
+                            setTimeout(resolve, (config.authentication?.waitAfterLogin || 10) * 1000),
+                        );
+                        console.log('Manual login wait completed');
+                    }
+                    break;
+
+                case 'credentials':
+                    if (config.authentication.credentials?.username && config.authentication.credentials?.password) {
+                        console.log('Processing credentials login...');
+
+                        const credentials = config.authentication.credentials;
+                        const usernameSelector =
+                            credentials.usernameSelector ||
+                            'input[name="username"], input[name="email"], #username, #email';
+                        const passwordSelector = credentials.passwordSelector || 'input[name="password"], #password';
+                        const submitSelector =
+                            credentials.submitSelector || 'button[type="submit"], input[type="submit"], .login-button';
+
+                        try {
+                            // Wait for login form to be present
+                            await page.waitForSelector(usernameSelector, { timeout: 10000 });
+                            await page.waitForSelector(passwordSelector, { timeout: 10000 });
+
+                            // Fill username
+                            console.log(`Filling username: ${credentials.username}`);
+                            await page.type(usernameSelector, credentials.username || '');
+
+                            // Fill password
+                            console.log('Filling password...');
+                            await page.type(passwordSelector, credentials.password || '');
+
+                            // Submit form
+                            console.log('Submitting login form...');
+                            await page.click(submitSelector);
+
+                            // Wait for navigation after login
+                            await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 });
+                            console.log('Login completed successfully');
+                        } catch (error) {
+                            console.log(`Error during credentials login: ${error}`);
+                        }
+                    }
+                    break;
+
+                case 'cookies':
+                    if (config.authentication.cookies) {
+                        console.log('Processing cookies authentication...');
+                        try {
+                            const cookies = JSON.parse(config.authentication.cookies);
+                            await page.setCookie(...cookies);
+                            console.log(`Set ${cookies.length} cookies`);
+
+                            // Reload page with cookies
+                            await page.reload({ waitUntil: 'networkidle2' });
+                            console.log('Page reloaded with cookies');
+                        } catch (error) {
+                            console.log(`Error setting cookies: ${error}`);
+                        }
+                    }
+                    break;
+
+                case 'session':
+                    if (config.authentication.sessionData) {
+                        console.log('Processing session data...');
+                        try {
+                            const sessionData = JSON.parse(config.authentication.sessionData);
+
+                            // Set localStorage
+                            if (sessionData.localStorage) {
+                                await page.evaluateOnNewDocument((data) => {
+                                    for (const [key, value] of Object.entries(data)) {
+                                        localStorage.setItem(key, value as string);
+                                    }
+                                }, sessionData.localStorage);
+                            }
+
+                            // Set sessionStorage
+                            if (sessionData.sessionStorage) {
+                                await page.evaluateOnNewDocument((data) => {
+                                    for (const [key, value] of Object.entries(data)) {
+                                        sessionStorage.setItem(key, value as string);
+                                    }
+                                }, sessionData.sessionStorage);
+                            }
+
+                            // Reload page with session data
+                            await page.reload({ waitUntil: 'networkidle2' });
+                            console.log('Page reloaded with session data');
+                        } catch (error) {
+                            console.log(`Error setting session data: ${error}`);
+                        }
+                    }
+                    break;
+            }
+        }
 
         // Wait for the specified delay
         if (config.loadDelay > 0) {

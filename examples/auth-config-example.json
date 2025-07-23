@@ -1,0 +1,26 @@
+{
+    "name": "Example with Authentication",
+    "description": "Example configuration with authentication enabled",
+    "url": "https://example.com/login",
+    "loadDelay": 3,
+    "authentication": {
+        "enabled": true,
+        "method": "credentials",
+        "credentials": {
+            "username": "your_username",
+            "password": "your_password",
+            "usernameSelector": "input[name='username']",
+            "passwordSelector": "input[name='password']",
+            "submitSelector": "button[type='submit']"
+        },
+        "waitAfterLogin": 5
+    },
+    "fields": [
+        {
+            "id": "field1",
+            "selector": "input[name='field1']",
+            "value": "test value",
+            "type": "input"
+        }
+    ]
+}

@@ -15,6 +15,7 @@ import { LogsPanel } from '@/components/LogsPanel';
 import { ResultPanel } from '@/components/ResultPanel';
 import { ImportConfig } from '@/components/ImportConfig';
 import { TestValuesManager } from '@/components/TestValuesManager';
+import { AuthenticationManager } from '@/components/AuthenticationManager';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
 interface FormField {
@@ -24,12 +25,28 @@ interface FormField {
     type: 'input' | 'select' | 'textarea' | 'checkbox' | 'radio' | 'submit';
 }
 
+interface AuthenticationConfig {
+    enabled: boolean;
+    method: 'manual' | 'credentials' | 'cookies' | 'session';
+    credentials?: {
+        username?: string;
+        password?: string;
+        usernameSelector?: string;
+        passwordSelector?: string;
+        submitSelector?: string;
+    };
+    cookies?: string;
+    sessionData?: string;
+    waitAfterLogin?: number;
+}
+
 interface AutomationConfig {
     name?: string;
     description?: string;
     url: string;
     loadDelay: number;
     fields: FormField[];
+    authentication?: AuthenticationConfig;
 }
 
 export default function Home() {
@@ -340,6 +357,22 @@ export default function Home() {
                                         <AccordionTrigger className="text-sm">Import Configuration</AccordionTrigger>
                                         <AccordionContent className="pt-2">
                                             <ImportConfig onImport={handleImportConfig} />
+                                        </AccordionContent>
+                                    </AccordionItem>
+
+                                    <AccordionItem value="authentication">
+                                        <AccordionTrigger className="text-sm">Authentication</AccordionTrigger>
+                                        <AccordionContent className="pt-2">
+                                            <AuthenticationManager
+                                                config={config.authentication || { enabled: false, method: 'manual' }}
+                                                onConfigChange={(authConfig) =>
+                                                    setConfig((prev) => ({
+                                                        ...prev,
+                                                        authentication: authConfig,
+                                                    }))
+                                                }
+                                                disabled={isRunning}
+                                            />
                                         </AccordionContent>
                                     </AccordionItem>
 

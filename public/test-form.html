@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Test Form - Auto Form Filler</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                max-width: 600px;
+                margin: 50px auto;
+                padding: 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
+            .form-container {
+                background: white;
+                padding: 40px;
+                border-radius: 16px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+                color: #1a202c;
+                text-align: center;
+                margin-bottom: 30px;
+                font-size: 2rem;
+                font-weight: 700;
+            }
+            .form-group {
+                margin-bottom: 24px;
+            }
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 600;
+                color: #2d3748;
+                font-size: 0.875rem;
+            }
+            input,
+            select,
+            textarea {
+                width: 100%;
+                padding: 12px 16px;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                font-size: 16px;
+                box-sizing: border-box;
+                transition: all 0.2s ease;
+            }
+            input:focus,
+            select:focus,
+            textarea:focus {
+                outline: none;
+                border-color: #667eea;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            }
+            textarea {
+                height: 120px;
+                resize: vertical;
+            }
+            .checkbox-group {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .checkbox-group input[type='checkbox'] {
+                width: auto;
+                margin: 0;
+            }
+            .radio-group {
+                display: flex;
+                gap: 24px;
+            }
+            .radio-group label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 500;
+                cursor: pointer;
+            }
+            .radio-group input[type='radio'] {
+                width: auto;
+                margin: 0;
+            }
+            button {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 16px 32px;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                width: 100%;
+                transition: all 0.2s ease;
+            }
+            button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            }
+            .result {
+                margin-top: 24px;
+                padding: 20px;
+                background: #f7fafc;
+                border-radius: 8px;
+                border: 2px solid #e2e8f0;
+                display: none;
+            }
+            .result h3 {
+                margin: 0 0 16px 0;
+                color: #2d3748;
+            }
+            .result pre {
+                background: #2d3748;
+                color: #e2e8f0;
+                padding: 16px;
+                border-radius: 6px;
+                overflow-x: auto;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+            .field-info {
+                font-size: 0.75rem;
+                color: #718096;
+                margin-top: 4px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="form-container">
+            <h1>🧪 Test Form</h1>
+            <form id="testForm">
+                <div class="form-group">
+                    <label for="name">Full Name:</label>
+                    <input type="text" id="name" name="name" placeholder="Enter your full name" />
+                    <div class="field-info">Selector: input[name='name']</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address:</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email" />
+                    <div class="field-info">Selector: input[name='email']</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number:</label>
+                    <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" />
+                    <div class="field-info">Selector: input[name='phone']</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="country">Country:</label>
+                    <select id="country" name="country">
+                        <option value="">Select a country</option>
+                        <option value="US">United States</option>
+                        <option value="CA">Canada</option>
+                        <option value="UK">United Kingdom</option>
+                        <option value="AU">Australia</option>
+                        <option value="DE">Germany</option>
+                        <option value="FR">France</option>
+                        <option value="JP">Japan</option>
+                    </select>
+                    <div class="field-info">Selector: select[name='country']</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Subject:</label>
+                    <select id="subject" name="subject">
+                        <option value="">Select a subject</option>
+                        <option value="general">General Inquiry</option>
+                        <option value="support">Technical Support</option>
+                        <option value="billing">Billing Question</option>
+                        <option value="feedback">Feedback</option>
+                    </select>
+                    <div class="field-info">Selector: select[name='subject']</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Message:</label>
+                    <textarea id="message" name="message" placeholder="Enter your message here..."></textarea>
+                    <div class="field-info">Selector: textarea[name='message']</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Gender:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="gender" value="male" />
+                            Male
+                        </label>
+                        <label>
+                            <input type="radio" name="gender" value="female" />
+                            Female
+                        </label>
+                        <label>
+                            <input type="radio" name="gender" value="other" />
+                            Other
+                        </label>
+                    </div>
+                    <div class="field-info">Selector: input[name='gender'][value='male']</div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="newsletter" name="newsletter" value="true" />
+                        <label for="newsletter">Subscribe to newsletter</label>
+                    </div>
+                    <div class="field-info">Selector: input[name='newsletter']</div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="terms" name="terms" value="true" />
+                        <label for="terms">I agree to the terms and conditions</label>
+                    </div>
+                    <div class="field-info">Selector: input[name='terms']</div>
+                </div>
+
+                <button type="submit">Submit Form</button>
+            </form>
+
+            <div id="result" class="result">
+                <h3>📋 Form Data:</h3>
+                <pre id="formData"></pre>
+            </div>
+        </div>
+
+        <script>
+            document.getElementById('testForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                const data = {};
+
+                for (let [key, value] of formData.entries()) {
+                    if (data[key]) {
+                        if (Array.isArray(data[key])) {
+                            data[key].push(value);
+                        } else {
+                            data[key] = [data[key], value];
+                        }
+                    } else {
+                        data[key] = value;
+                    }
+                }
+
+                document.getElementById('formData').textContent = JSON.stringify(data, null, 2);
+                document.getElementById('result').style.display = 'block';
+
+                // Scroll to result
+                document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+            });
+        </script>
+    </body>
+</html>

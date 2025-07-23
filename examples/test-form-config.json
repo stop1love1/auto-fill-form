@@ -1,0 +1,51 @@
+{
+    "url": "http://localhost:4002/test-form.html",
+    "loadDelay": 2,
+    "fields": [
+        {
+            "selector": "input[name='name']",
+            "type": "input",
+            "value": "John Doe"
+        },
+        {
+            "selector": "input[name='email']",
+            "type": "input",
+            "value": "john.doe@example.com"
+        },
+        {
+            "selector": "input[name='phone']",
+            "type": "input",
+            "value": "+1-555-123-4567"
+        },
+        {
+            "selector": "select[name='country']",
+            "type": "select",
+            "value": "US"
+        },
+        {
+            "selector": "select[name='subject']",
+            "type": "select",
+            "value": "general"
+        },
+        {
+            "selector": "textarea[name='message']",
+            "type": "textarea",
+            "value": "This is a test message from the automated form filler. The form has been successfully filled with test data."
+        },
+        {
+            "selector": "input[name='gender'][value='male']",
+            "type": "radio",
+            "value": "male"
+        },
+        {
+            "selector": "input[name='newsletter']",
+            "type": "checkbox",
+            "value": "true"
+        },
+        {
+            "selector": "input[name='terms']",
+            "type": "checkbox",
+            "value": "true"
+        }
+    ]
+}

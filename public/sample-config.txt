@@ -3,6 +3,18 @@
   "description": "Automated login testing with multiple accounts",
   "url": "https://el.edusoft.vn/auth/login",
   "loadDelay": 3,
+  "authentication": {
+    "enabled": true,
+    "method": "credentials",
+    "credentials": {
+      "username": "admin",
+      "password": "admin123",
+      "usernameSelector": "input[id=username]",
+      "passwordSelector": "input[id=password]",
+      "submitSelector": "button[type=submit]"
+    },
+    "waitAfterLogin": 5
+  },
   "fields": [
     {
       "id": "username-field",

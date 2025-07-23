@@ -1,24 +1,36 @@
 {
-    "name": "Edusoft Login Sample",
-    "description": "Sample configuration for Edusoft login automation",
-    "url": "https://el.edusoft.vn/auth/login",
+    "name": "Sample Configuration with Authentication",
+    "description": "Example configuration for form automation with login",
+    "url": "https://example.com/login",
     "loadDelay": 3,
+    "authentication": {
+        "enabled": true,
+        "method": "credentials",
+        "credentials": {
+            "username": "your_username",
+            "password": "your_password",
+            "usernameSelector": "input[name='username']",
+            "passwordSelector": "input[name='password']",
+            "submitSelector": "button[type='submit']"
+        },
+        "waitAfterLogin": 5
+    },
     "fields": [
         {
-            "id": "username-field",
-            "selector": "input[id=username]",
-            "value": "your_username_here",
+            "id": "username",
+            "selector": "input[name='username']",
+            "value": "{username}",
             "type": "input"
         },
         {
-            "id": "password-field",
-            "selector": "input[id=password]",
-            "value": "your_password_here",
+            "id": "password",
+            "selector": "input[name='password']",
+            "value": "{password}",
             "type": "input"
         },
         {
-            "id": "submit-button",
-            "selector": "button[type=submit]",
+            "id": "submit",
+            "selector": "button[type='submit']",
             "value": "",
             "type": "submit"
         }

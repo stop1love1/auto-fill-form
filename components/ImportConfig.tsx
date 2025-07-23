@@ -15,12 +15,28 @@ interface FormField {
     type: 'input' | 'select' | 'textarea' | 'checkbox' | 'radio' | 'submit';
 }
 
+interface AuthenticationConfig {
+    enabled: boolean;
+    method: 'manual' | 'credentials' | 'cookies' | 'session';
+    credentials?: {
+        username?: string;
+        password?: string;
+        usernameSelector?: string;
+        passwordSelector?: string;
+        submitSelector?: string;
+    };
+    cookies?: string;
+    sessionData?: string;
+    waitAfterLogin?: number;
+}
+
 interface AutomationConfig {
     name?: string;
     description?: string;
     url: string;
     loadDelay: number;
     fields: FormField[];
+    authentication?: AuthenticationConfig;
 }
 
 interface ImportedData {
@@ -43,6 +59,7 @@ export function ImportConfig({ onImport }: ImportConfigProps) {
         let configText = '';
         let testValues: string[] = [];
         let inConfig = true;
+        let braceCount = 0;
 
         for (const line of lines) {
             const trimmedLine = line.trim();
@@ -52,34 +69,60 @@ export function ImportConfig({ onImport }: ImportConfigProps) {
                 continue;
             }
 
-            // Check if we've reached the test values section
-            if (trimmedLine.includes(',') && !trimmedLine.includes('"') && !trimmedLine.includes('{')) {
-                inConfig = false;
-            }
-
             if (inConfig) {
                 configText += line + '\n';
+
+                // Count braces to detect JSON end
+                for (const char of line) {
+                    if (char === '{') braceCount++;
+                    if (char === '}') braceCount--;
+                }
+
+                // If we've closed all braces, we're done with JSON
+                if (braceCount === 0 && configText.trim().endsWith('}')) {
+                    inConfig = false;
+                }
             } else {
-                testValues.push(trimmedLine);
+                // Only add non-empty lines as test values
+                if (trimmedLine && !trimmedLine.startsWith('#')) {
+                    testValues.push(trimmedLine);
+                }
             }
         }
 
-        // Parse JSON config
-        const config = JSON.parse(configText) as AutomationConfig;
-
-        // Validate config structure
-        if (!config.url || !config.fields || !Array.isArray(config.fields)) {
-            throw new Error('Invalid configuration format. Please check the JSON structure.');
-        }
-
-        // Validate fields
-        for (const field of config.fields) {
-            if (!field.selector || !field.type) {
-                throw new Error('Each field must have a selector and type.');
+        try {
+            // Validate JSON structure first
+            const trimmedConfigText = configText.trim();
+            if (!trimmedConfigText.startsWith('{') || !trimmedConfigText.endsWith('}')) {
+                throw new Error('Configuration must start with { and end with }');
             }
-        }
 
-        return { config, testValues };
+            // Parse JSON config
+            const config = JSON.parse(trimmedConfigText) as AutomationConfig;
+
+            // Validate config structure
+            if (!config.url || !config.fields || !Array.isArray(config.fields)) {
+                throw new Error('Invalid configuration format. Please check the JSON structure.');
+            }
+
+            // Validate fields
+            for (const field of config.fields) {
+                if (!field.selector || !field.type) {
+                    throw new Error('Each field must have a selector and type.');
+                }
+            }
+
+            return { config, testValues };
+        } catch (parseError) {
+            if (parseError instanceof SyntaxError) {
+                throw new Error(
+                    `JSON syntax error: ${parseError.message}. Please check for missing commas, brackets, or quotes.`,
+                );
+            }
+            throw new Error(
+                `JSON parsing error: ${parseError instanceof Error ? parseError.message : 'Invalid JSON format'}`,
+            );
+        }
     };
 
     const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,26 +156,38 @@ export function ImportConfig({ onImport }: ImportConfigProps) {
 
     const handleSampleDownload = () => {
         const sampleConfig = {
-            name: 'Sample Configuration',
-            description: 'Example configuration for form automation',
-            url: 'https://example.com/form',
+            name: 'Sample Configuration with Authentication',
+            description: 'Example configuration for form automation with login',
+            url: 'https://example.com/login',
             loadDelay: 3,
+            authentication: {
+                enabled: true,
+                method: 'credentials' as const,
+                credentials: {
+                    username: 'your_username',
+                    password: 'your_password',
+                    usernameSelector: 'input[name="username"]',
+                    passwordSelector: 'input[name="password"]',
+                    submitSelector: 'button[type="submit"]',
+                },
+                waitAfterLogin: 5,
+            },
             fields: [
                 {
                     id: 'username',
-                    selector: 'input[name=username]',
-                    value: 'your_username',
+                    selector: 'input[name="username"]',
+                    value: '{username}',
                     type: 'input' as const,
                 },
                 {
                     id: 'password',
-                    selector: 'input[name=password]',
-                    value: 'your_password',
+                    selector: 'input[name="password"]',
+                    value: '{password}',
                     type: 'input' as const,
                 },
                 {
                     id: 'submit',
-                    selector: 'button[type=submit]',
+                    selector: 'button[type="submit"]',
                     value: '',
                     type: 'submit' as const,
                 },
@@ -217,6 +272,8 @@ export function ImportConfig({ onImport }: ImportConfigProps) {
                         </li>
                         <li>Use placeholders like {'{username}'} in field values</li>
                         <li>Test values: one per line, comma-separated</li>
+                        <li>Comments start with #</li>
+                        <li>JSON must be complete and valid</li>
                     </ul>
                 </div>
             </CardContent>
